@@ -1,0 +1,263 @@
+{
+  "amostras": 1941,
+  "atributos_originais": 33,
+  "atributos_usados": 26,
+  "removidos": [
+    "Pastry",
+    "Z_Scratch",
+    "K_Scatch",
+    "Stains",
+    "Dirtiness",
+    "Bumps",
+    "TypeOfSteel_A400"
+  ],
+  "classes": {
+    "defeito_comum": 1268,
+    "other_faults": 673
+  },
+  "vazamento": 1.0,
+  "correlacoes": [
+    {
+      "atributo": "Steel_Plate_Thickness",
+      "r": 0.3156711300286034
+    },
+    {
+      "atributo": "Minimum_of_Luminosity",
+      "r": 0.22811184806121373
+    },
+    {
+      "atributo": "Sum_of_Luminosity",
+      "r": -0.205889611613556
+    },
+    {
+      "atributo": "LogOfAreas",
+      "r": -0.1931206598535719
+    },
+    {
+      "atributo": "Pixels_Areas",
+      "r": -0.1846317944668156
+    },
+    {
+      "atributo": "Outside_X_Index",
+      "r": -0.16670948827907736
+    }
+  ],
+  "resumo": {
+    "kNN (Dist. Euclidiana)": {
+      "acuracia": {
+        "media": 0.7882239625887619,
+        "desvio": 0.012418265793510078
+      },
+      "precisao": {
+        "media": 0.7726454307065478,
+        "desvio": 0.0163620470815027
+      },
+      "recall": {
+        "media": 0.7476242117868119,
+        "desvio": 0.014701468777212214
+      },
+      "f1": {
+        "media": 0.7561403901911146,
+        "desvio": 0.01431021311693002
+      },
+      "tempo_treino": {
+        "media": 4.8055998377094514e-06,
+        "desvio": 2.137613892097516e-06
+      },
+      "tempo_teste": {
+        "media": 0.062156479999976,
+        "desvio": 0.002932890986887113
+      }
+    },
+    "kNN (Dist. Manhattan)": {
+      "acuracia": {
+        "media": 0.7902911460512942,
+        "desvio": 0.01768689773789117
+      },
+      "precisao": {
+        "media": 0.7767457301457882,
+        "desvio": 0.021102926071364846
+      },
+      "recall": {
+        "media": 0.7460620209428377,
+        "desvio": 0.022078435937079033
+      },
+      "f1": {
+        "media": 0.7561265263000388,
+        "desvio": 0.022158277529602147
+      },
+      "tempo_treino": {
+        "media": 3.0977998903836124e-06,
+        "desvio": 1.0792112990752077e-07
+      },
+      "tempo_teste": {
+        "media": 0.05789453800007323,
+        "desvio": 0.0008654706175548363
+      }
+    },
+    "Bayesiano (Univariado)": {
+      "acuracia": {
+        "media": 0.5110725839129019,
+        "desvio": 0.0034032798951624805
+      },
+      "precisao": {
+        "media": 0.6505949374593155,
+        "desvio": 0.011003159440183402
+      },
+      "recall": {
+        "media": 0.6100864180957382,
+        "desvio": 0.0034643554750603774
+      },
+      "f1": {
+        "media": 0.5017442788059764,
+        "desvio": 0.004860201121501859
+      },
+      "tempo_treino": {
+        "media": 0.0002475231999596872,
+        "desvio": 3.43832777297295e-05
+      },
+      "tempo_teste": {
+        "media": 8.554740015824791e-05,
+        "desvio": 9.54949426685945e-06
+      }
+    },
+    "Bayesiano (Multivariado)": {
+      "acuracia": {
+        "media": 0.6059504593371994,
+        "desvio": 0.04985799128436928
+      },
+      "precisao": {
+        "media": 0.6911931576825767,
+        "desvio": 0.011565153690051757
+      },
+      "recall": {
+        "media": 0.6731959963374783,
+        "desvio": 0.013416576300111978
+      },
+      "f1": {
+        "media": 0.6001565955646153,
+        "desvio": 0.044450563418097354
+      },
+      "tempo_treino": {
+        "media": 0.00036781100006919585,
+        "desvio": 9.98986073666598e-05
+      },
+      "tempo_teste": {
+        "media": 0.0005462314000396872,
+        "desvio": 2.035033488278254e-05
+      }
+    }
+  },
+  "matriz_confusao": {
+    "kNN (Dist. Euclidiana)": [
+      [
+        1116,
+        152
+      ],
+      [
+        259,
+        414
+      ]
+    ],
+    "kNN (Dist. Manhattan)": [
+      [
+        1129,
+        139
+      ],
+      [
+        268,
+        405
+      ]
+    ],
+    "Bayesiano (Univariado)": [
+      [
+        364,
+        904
+      ],
+      [
+        45,
+        628
+      ]
+    ],
+    "Bayesiano (Multivariado)": [
+      [
+        575,
+        693
+      ],
+      [
+        72,
+        601
+      ]
+    ]
+  },
+  "curva_k": {
+    "euclidiana": [
+      {
+        "k": 1,
+        "acuracia": 0.7732873664002976
+      },
+      {
+        "k": 3,
+        "acuracia": 0.7753332934776112
+      },
+      {
+        "k": 5,
+        "acuracia": 0.7882239625887619
+      },
+      {
+        "k": 7,
+        "acuracia": 0.7908291983021462
+      },
+      {
+        "k": 9,
+        "acuracia": 0.7872275695316289
+      },
+      {
+        "k": 11,
+        "acuracia": 0.786689517280777
+      },
+      {
+        "k": 15,
+        "acuracia": 0.7743395574686303
+      },
+      {
+        "k": 21,
+        "acuracia": 0.7650505171279967
+      }
+    ],
+    "manhattan": [
+      {
+        "k": 1,
+        "acuracia": 0.7779252439502334
+      },
+      {
+        "k": 3,
+        "acuracia": 0.7887487295988521
+      },
+      {
+        "k": 5,
+        "acuracia": 0.7902911460512942
+      },
+      {
+        "k": 7,
+        "acuracia": 0.7825976631261501
+      },
+      {
+        "k": 9,
+        "acuracia": 0.7872142842908672
+      },
+      {
+        "k": 11,
+        "acuracia": 0.7861886637040579
+      },
+      {
+        "k": 15,
+        "acuracia": 0.7758740027766153
+      },
+      {
+        "k": 21,
+        "acuracia": 0.7712387822748318
+      }
+    ]
+  }
+}

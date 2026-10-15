@@ -1,0 +1,312 @@
+{
+  "amostras": 2108,
+  "instancias": 527,
+  "atributos_usados": 25,
+  "runstatus": {
+    "memout": 371,
+    "ok": 1526,
+    "timeout": 211
+  },
+  "runtime": {
+    "mediana": 65.92,
+    "media": 1164.9277775142314
+  },
+  "faixas_runtime": {
+    "<1": 493,
+    "1-10": 332,
+    "10-100": 298,
+    "100-1000": 280,
+    "1000-3600": 123,
+    "3600": 582
+  },
+  "correlacoes": [
+    {
+      "atributo": "overstowage.pct",
+      "r": 0.3251019112801088
+    },
+    {
+      "atributo": "bflb",
+      "r": 0.31925579676871113
+    },
+    {
+      "atributo": "container.density",
+      "r": 0.2764736340785559
+    },
+    {
+      "atributo": "tiers",
+      "r": 0.2445976760236015
+    },
+    {
+      "atributo": "top.good.max",
+      "r": 0.24349632690065112
+    },
+    {
+      "atributo": "top.good.mean",
+      "r": 0.22144810590576502
+    }
+  ],
+  "resumo": {
+    "kNN (Dist. Euclidiana)": {
+      "r2": {
+        "media": 0.2560230847304597,
+        "desvio": 0.025035831236816887
+      },
+      "r2_ajustado": {
+        "media": 0.20900913980130448,
+        "desvio": 0.026536012363583387
+      },
+      "mae": {
+        "media": 2.206256845967558,
+        "desvio": 0.029983151238413535
+      },
+      "rmse": {
+        "media": 2.7867852174135237,
+        "desvio": 0.042343782392729956
+      },
+      "mae_segundos": {
+        "media": 959.1251465559801,
+        "desvio": 69.65448533572798
+      },
+      "tempo_treino": {
+        "media": 3.922199994121911e-06,
+        "desvio": 7.83136446218655e-07
+      },
+      "tempo_teste": {
+        "media": 0.06928535080005531,
+        "desvio": 0.0011218634329601136
+      }
+    },
+    "kNN (Dist. Manhattan)": {
+      "r2": {
+        "media": 0.3041207175858339,
+        "desvio": 0.06093178193899466
+      },
+      "r2_ajustado": {
+        "media": 0.2601389495464302,
+        "desvio": 0.06484702931925958
+      },
+      "mae": {
+        "media": 2.0935480943338183,
+        "desvio": 0.06914961771889991
+      },
+      "rmse": {
+        "media": 2.6917958266268878,
+        "desvio": 0.07353283109706985
+      },
+      "mae_segundos": {
+        "media": 952.6391563283676,
+        "desvio": 77.39528002657848
+      },
+      "tempo_treino": {
+        "media": 3.012400156876538e-06,
+        "desvio": 2.436361889056607e-07
+      },
+      "tempo_teste": {
+        "media": 0.06859784640018915,
+        "desvio": 0.002005235005003123
+      }
+    },
+    "Regressão Linear Múltipla": {
+      "r2": {
+        "media": 0.30854674514541813,
+        "desvio": 0.024375004305253932
+      },
+      "r2_ajustado": {
+        "media": 0.26484873339805154,
+        "desvio": 0.025935289437084744
+      },
+      "mae": {
+        "media": 2.2542077819917923,
+        "desvio": 0.05319614114690189
+      },
+      "rmse": {
+        "media": 2.6864263560256845,
+        "desvio": 0.03038897584433578
+      },
+      "mae_segundos": {
+        "media": 1052.32872227656,
+        "desvio": 98.10346273120138
+      },
+      "tempo_treino": {
+        "media": 0.00035996300002807404,
+        "desvio": 0.00012877821731697344
+      },
+      "tempo_teste": {
+        "media": 1.7769599980965723e-05,
+        "desvio": 4.892932646976165e-06
+      }
+    }
+  },
+  "curva_k": {
+    "euclidiana": [
+      {
+        "k": 1,
+        "r2": -0.23186454894108594
+      },
+      {
+        "k": 3,
+        "r2": 0.19034974852581216
+      },
+      {
+        "k": 5,
+        "r2": 0.2560230847304597
+      },
+      {
+        "k": 7,
+        "r2": 0.275777632334518
+      },
+      {
+        "k": 9,
+        "r2": 0.28766366326713333
+      },
+      {
+        "k": 11,
+        "r2": 0.2863861049672135
+      },
+      {
+        "k": 15,
+        "r2": 0.2952015608413496
+      },
+      {
+        "k": 21,
+        "r2": 0.2792677941416666
+      }
+    ],
+    "manhattan": [
+      {
+        "k": 1,
+        "r2": -0.12039727445767534
+      },
+      {
+        "k": 3,
+        "r2": 0.25009371948437376
+      },
+      {
+        "k": 5,
+        "r2": 0.3041207175858339
+      },
+      {
+        "k": 7,
+        "r2": 0.3163381449414013
+      },
+      {
+        "k": 9,
+        "r2": 0.3190996459857326
+      },
+      {
+        "k": 11,
+        "r2": 0.31851748845451083
+      },
+      {
+        "k": 15,
+        "r2": 0.3302433552981218
+      },
+      {
+        "k": 21,
+        "r2": 0.3361111999677303
+      }
+    ]
+  },
+  "coeficientes": [
+    {
+      "atributo": "stacks",
+      "beta": 4.5457123835858315
+    },
+    {
+      "atributo": "bflb",
+      "beta": -3.5837395269144174
+    },
+    {
+      "atributo": "tiers",
+      "beta": 3.080791297178766
+    },
+    {
+      "atributo": "overstowage.pct",
+      "beta": 1.728522204404222
+    },
+    {
+      "atributo": "stack.tier.ratio",
+      "beta": -1.4565258545665754
+    },
+    {
+      "atributo": "container.density",
+      "beta": 1.318376178465539
+    },
+    {
+      "atributo": "empty.stack.pct",
+      "beta": -0.7417611068154136
+    },
+    {
+      "atributo": "group.same.min",
+      "beta": 0.6430047806157161
+    },
+    {
+      "atributo": "tier.weighted.groups",
+      "beta": -0.5993146663121858
+    },
+    {
+      "atributo": "cont.empty.grt.estack",
+      "beta": 0.5775829657960945
+    },
+    {
+      "atributo": "top.good.mean",
+      "beta": -0.29006866544334997
+    },
+    {
+      "atributo": "top.good.max",
+      "beta": 0.24913693082896296
+    },
+    {
+      "atributo": "overstowing.stack.pct",
+      "beta": 0.18102431399218866
+    },
+    {
+      "atributo": "group.same.mean",
+      "beta": -0.16423718398516715
+    },
+    {
+      "atributo": "alg=idastar.symmulgt.transmul",
+      "beta": -0.15618763913359698
+    },
+    {
+      "atributo": "left.density",
+      "beta": 0.15346069574232057
+    },
+    {
+      "atributo": "alg=astar.symmullt.transmul",
+      "beta": 0.10765989448638685
+    },
+    {
+      "atributo": "pct.bottom.pct.on.top",
+      "beta": 0.09575949413643879
+    },
+    {
+      "atributo": "top.good.min",
+      "beta": 0.09475301999850894
+    },
+    {
+      "atributo": "group.same.stdev",
+      "beta": 0.08260480381473467
+    },
+    {
+      "atributo": "alg=idastar.symmullt.transmul",
+      "beta": 0.04818709030578657
+    },
+    {
+      "atributo": "top.good.stdev",
+      "beta": 0.022816436075464144
+    },
+    {
+      "atributo": "avg.l1.top.left.lg.group",
+      "beta": -0.018671251391177077
+    },
+    {
+      "atributo": "overstowing.2cont.stack.pct",
+      "beta": 0.011283535651609375
+    },
+    {
+      "atributo": "group.same.max",
+      "beta": 0.007998303262216955
+    }
+  ]
+}
