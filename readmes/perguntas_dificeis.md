@@ -114,7 +114,7 @@ Ponto delicado. No código, ele usa o n do fold de teste, e a fórmula clássica
 **24. Por que média macro, e não micro ou ponderada?**
 No problema binário, a micro é igual à acurácia, e a ponderada daria mais peso à classe maior (65%). A macro dá o mesmo peso às duas classes, e assim os erros na classe menor aparecem.
 
-**25. A matriz do slide 9 é de qual fold?**
+**25. A matriz do slide 8 é de qual fold?**
 De nenhum fold isolado: é a soma dos 5. Como cada amostra é testada exatamente uma vez, a soma tem as 1941 chapas.
 
 **26. A acurácia de 79,0% do slide é a mesma que sai da matriz somada?**

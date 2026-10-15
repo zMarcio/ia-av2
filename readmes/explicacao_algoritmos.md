@@ -169,42 +169,7 @@ idastar.symmullt          →      0       0       1
 ```
 
 ### 💻 No código
-`scripts/regressao_41700.py`, em `carregar`:
-```python
-algoritmos = sorted(set(l[i_alg] for l in linhas))                     # os 4 nomes, em ordem
-X_alg = np.array([[1.0 if l[i_alg] == a else 0.0 for a in algoritmos[1:]] for l in linhas])
-X = np.hstack([X_num, X_alg])                                           # 22 do pátio + 3 = 25
-```
-- O `algoritmos[1:]` pula o 1º nome, e é por isso que só saem 3 colunas.
-- O `1.0 if ... else 0.0` marca 1 na coluna do algoritmo daquela linha.
-
-### O que acontece com essas colunas no z-score
-As 3 colunas também passam pelo z-score, junto com as outras 22. Não existe código separado para elas: `PadronizadorZScore` faz a mesma conta em todas as colunas.
-
-**Valores reais (iguais nos 5 folds):**
-```
-cada algoritmo aparece em 25% das linhas
-μ = 0,25        σ = √(0,25 · 0,75) = 0,433
-
-0  →  (0 − 0,25) / 0,433 = −0,58     ← "não foi esse algoritmo"
-1  →  (1 − 0,25) / 0,433 = +1,73     ← "foi esse algoritmo"
-```
-
-**O que o modelo recebe:**
-```
-           alg=2    alg=3    alg=4
-linha A   +1,73    −0,58    −0,58   ← algoritmo 2
-linha B   −0,58    −0,58    +1,73   ← algoritmo 4
-linha C   −0,58    −0,58    −0,58   ← nenhum valor alto: é o 1º
-```
-
-- **O valor muda, o significado não.** A tabela que vai para o modelo (`X_tr`) tem −0,58 e +1,73. Ela não volta a ser 0 e 1.
-- **Quem diz qual algoritmo é a coluna.** O valor alto (+1,73) marca a coluna do algoritmo usado, como o 1 fazia antes.
-- **Não há valor no meio.** A coluna só tinha 0 ou 1, então depois só tem −0,58 ou +1,73.
-- **O 0 sempre vira negativo, e o 1 sempre vira positivo.** A média de uma coluna 0/1 fica entre 0 e 1, então o 0 está sempre abaixo dela e o 1 sempre acima.
-- **Não dá divisão por zero.** O desvio é 0,433. Ele só seria 0 se a coluna fosse toda igual, e nesse caso o código troca por 1.
-- **O modelo não sabe o nome do algoritmo.** Ele aprende que +1,73 naquela coluna está ligado a tempos maiores ou menores. Na linear, isso vira o β da coluna. No kNN, linhas com o mesmo algoritmo ficam mais perto.
-- **Os valores são iguais nos 5 folds** porque cada pátio tem os 4 algoritmos, e os folds separam pátios inteiros.
+`scripts/regressao_41700.py`, em `carregar`: `algoritmos[1:]` cria só 3 colunas.
 
 ### Nuances
 São só 3 colunas para 4 algoritmos porque, se as três estão em 0, já se sabe que é o primeiro.

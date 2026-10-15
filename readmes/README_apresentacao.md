@@ -11,8 +11,8 @@ São 14 slides, cerca de 1 minuto cada. A ordem deixa a classificação junta (s
 | 5 | Algoritmos | kNN vota pelos vizinhos; Bayes usa a normal; a linear usa a equação normal. | vizinhos · normal · covariância · β |
 | 6 | Protocolo e métricas | 5 folds; estratificado na classificação, agrupado na regressão; z-score só no treino. Para que serve cada métrica. | 5 folds · média ± desvio · métricas |
 | 7 | Resultados: classificação | kNN Manhattan foi o melhor (79%). O Bayes univariado ficou abaixo do chute fixo (65%). | kNN 79% · Bayes 51% |
-| 8 | Acurácia e F1 | Os dados não seguem uma normal e são correlacionados, o que derruba o Bayes. | dados assimétricos · correlação |
-| 9 | Matriz de confusão | O kNN deixa passar 268 outros defeitos; o Bayes chama 904 defeitos comuns de outro defeito. | tipo de erro · rede gigante |
+| 8 | Matriz de confusão | O kNN deixa passar 268 outros defeitos; o Bayes chama 904 defeitos comuns de outro defeito. | tipo de erro · rede gigante |
+| 9 | Acurácia e F1 | Os dados não seguem uma normal e são correlacionados, o que derruba o Bayes. | dados assimétricos · correlação |
 | 10 | Efeito de k (classificação) | Análise extra: acurácia estável entre 77% e 79%; k = 5 fica no topo. | k = 5 adequado |
 | 11 | Resultados: regressão | Linear e kNN Manhattan com R² ≈ 0,31; a linear é mais estável. Na curva de k, k = 1 dá R² negativo. | R² 0,31 · estável · k |
 | 12 | Tempo | O kNN não treina, mas é lento para prever. Bayes e linear são rápidos. | kNN lento no teste |
@@ -51,6 +51,45 @@ Aqui também havia vazamento. A coluna *runstatus* diz se a execução deu certo
 
 O gráfico mostra o Y. Os tempos vão de menos de 1 segundo até uma hora, e 582 execuções pararam no limite de 3600. Como os valores são muito desiguais, eu treinei com o log do tempo, que deixa essa escala equilibrada."
 
+#### Apoio: one-hot do algoritmo de busca (se perguntarem)
+A coluna de texto `algorithm` vira **3 colunas de 0 e 1**. Se as três estão em 0, é o 1º algoritmo. Por isso são 3 colunas, e não 4.
+
+```
+algoritmo usado        alg=2   alg=3   alg=4
+astar.symmulgt    →      0       0       0     ← tudo zero = o 1º
+astar.symmullt    →      1       0       0
+idastar.symmulgt  →      0       1       0
+idastar.symmullt  →      0       0       1
+```
+
+Código: `scripts/regressao_41700.py`, em `carregar`. O `algoritmos[1:]` pula o 1º nome, e o `1.0 if ... else 0.0` marca 1 na coluna do algoritmo daquela linha.
+
+**Depois, essas colunas passam pelo z-score**, junto com as outras 22 (`PadronizadorZScore`, a mesma conta para todas as colunas). Valores reais, iguais nos 5 folds:
+```
+cada algoritmo aparece em 25% das linhas
+μ = 0,25        σ = √(0,25 · 0,75) = 0,433
+
+0  →  (0 − 0,25) / 0,433 = −0,58     ← "não foi esse algoritmo"
+1  →  (1 − 0,25) / 0,433 = +1,73     ← "foi esse algoritmo"
+```
+
+O que o modelo recebe:
+```
+           alg=2    alg=3    alg=4
+linha A   +1,73    −0,58    −0,58   ← algoritmo 2
+linha B   −0,58    −0,58    +1,73   ← algoritmo 4
+linha C   −0,58    −0,58    −0,58   ← nenhum valor alto: é o 1º
+```
+
+- O valor muda, mas o significado não: a tabela que vai para o modelo tem −0,58 e +1,73, e não volta a ser 0 e 1.
+- Quem diz qual algoritmo é a coluna: o valor alto (+1,73) marca a coluna do algoritmo usado, como o 1 fazia antes.
+- Não existe valor no meio: a coluna só tinha 0 ou 1, então depois só tem −0,58 ou +1,73.
+- O 0 sempre vira negativo e o 1 sempre vira positivo, porque a média de uma coluna 0/1 fica entre 0 e 1.
+- Não dá divisão por zero, porque o desvio é 0,433. Ele só seria 0 se a coluna fosse toda igual, e aí o código troca por 1.
+- O modelo não sabe o nome do algoritmo: ele aprende que +1,73 naquela coluna está ligado a tempos maiores ou menores.
+- Os valores são iguais nos 5 folds porque cada pátio tem os 4 algoritmos e os folds separam pátios inteiros.
+- Não se usa 1, 2, 3, 4 porque isso criaria uma ordem falsa entre os algoritmos.
+
 ### Slide 5: Algoritmos
 "O **kNN** não treina nada, só guarda os dados. Para prever, ele busca os 5 vizinhos mais próximos. Na classificação, faz votação; na regressão, tira a média. A distância pode ser a Euclidiana, que é a linha reta, ou a Manhattan, que soma as diferenças de cada atributo.
 
@@ -87,24 +126,24 @@ Para ter uma referência: como 65% das chapas são de defeito comum, um modelo q
 
 Repare também nos desvios. Os do kNN ficam perto de ±0,02, então o resultado é estável entre os folds."
 
-### Slide 8: Acurácia e F1
-"O gráfico compara a acurácia e o F1 de cada modelo. Os dois kNN ficam na frente, perto de 0,79 de acurácia e 0,76 de F1.
-
-Por que o Bayes foi mal? Ele supõe que cada atributo tem formato de sino, a distribuição normal. O univariado ainda supõe que os atributos são independentes entre si. Os dados quebram as duas regras: muitos atributos são tortos, e vários são quase cópias um do outro, como área e perímetro. O multivariado melhora porque enxerga a correlação, mas continua supondo o formato de sino.
-
-O kNN não supõe nada: ele só procura as 5 chapas mais parecidas e faz votação. Por isso ele se adapta melhor a esses dados."
-
-### Slide 9: Matriz de confusão
+### Slide 8: Matriz de confusão
 "A matriz mostra o tipo de erro, que a acurácia esconde. As linhas são o que a chapa era de verdade, e as colunas são o que o modelo disse. A diagonal azul são os acertos.
 
 O kNN acerta 1129 defeitos comuns e 405 outros defeitos. O erro principal dele é deixar passar 268 outros defeitos, chamando-os de comuns.
 
 O Bayes univariado erra do jeito oposto: ele chama 904 defeitos comuns de outro defeito, cerca de 71% deles. Ele encontra quase todos os outros defeitos (628 de 673), mas porque sai chamando quase tudo de outro defeito. É como jogar uma rede gigante: pega quase todos os peixes, mas vem muito lixo junto."
 
+### Slide 9: Acurácia e F1
+"O gráfico compara a acurácia e o F1 de cada modelo. Os dois kNN ficam na frente, perto de 0,79 de acurácia e 0,76 de F1.
+
+Por que o Bayes foi mal? Ele supõe que cada atributo tem formato de sino, a distribuição normal. O univariado ainda supõe que os atributos são independentes entre si. Os dados quebram as duas regras: muitos atributos são tortos, e vários são quase cópias um do outro, como área e perímetro. O multivariado melhora porque enxerga a correlação, mas continua supondo o formato de sino.
+
+O kNN não supõe nada: ele só procura as 5 chapas mais parecidas e faz votação. Por isso ele se adapta melhor a esses dados."
+
 ### Slide 10: Efeito de k na classificação
 "Esta é uma análise extra, que não foi pedida. Eu fixei k = 5 no trabalho e quis conferir se essa escolha era boa. Testei k de 1 a 21.
 
-Na classificação, a acurácia fica entre 77% e 79% em toda a faixa. Com k = 1 cai um pouco, porque o modelo segue um vizinho só e copia o ruído. O k = 5 fica no topo, então a escolha foi adequada.
+Na classificação, a acurácia fica entre 77% e 79% em toda a faixa. Com k = 1 cai um pouco, porque o modelo segue um vizinho só e copia o ruído. O k = 5 é o melhor da Manhattan e fica perto do melhor da Euclidiana, que chega a 79,1% com k = 7. Então a escolha foi adequada.
 
 As duas distâncias andam juntas, porque, com os dados em z-score, elas acham praticamente os mesmos vizinhos."
 
