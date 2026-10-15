@@ -45,21 +45,27 @@ SEMENTE = 42
 # ===========================================================================
 def carregar():
     nomes_arff, linhas = ler_arff(ARQUIVO)
+    # posição (índice) de cada coluna especial no arquivo
     i_id, i_rep, i_alg, i_rt, i_st = (nomes_arff.index(c) for c in
                                       ("instance_id", "repetition", "algorithm", "runtime", "runstatus"))
 
+    # as 22 colunas numéricas do pátio = todas menos as 5 especiais
     numericas = [j for j in range(len(nomes_arff)) if j not in (i_id, i_rep, i_alg, i_rt, i_st)]
     X_num = np.array([[float(l[j]) for j in numericas] for l in linhas])
 
-    algoritmos = sorted(set(l[i_alg] for l in linhas))
+    # ONE-HOT do algoritmo de busca (texto -> colunas 0/1)
+    algoritmos = sorted(set(l[i_alg] for l in linhas))                 # os 4 nomes, em ordem alfabética
+    # algoritmos[1:] pula o 1º: são só 3 colunas, e "tudo zero" = o 1º algoritmo.
+    # Com 4 colunas a soma seria sempre 1 (igual à coluna do β₀) e XᵗX ficaria sem inversa.
     X_alg = np.array([[1.0 if l[i_alg] == a else 0.0 for a in algoritmos[1:]] for l in linhas])
 
-    X = np.hstack([X_num, X_alg])
+    X = np.hstack([X_num, X_alg])          # X final: 22 do pátio + 3 do algoritmo = 25 colunas
     nomes = [nomes_arff[j] for j in numericas] + [f"alg={a}" for a in algoritmos[1:]]
 
-    runtime = np.array([float(l[i_rt]) for l in linhas])
-    y = np.log1p(runtime)                                  # log(1 + runtime)
+    runtime = np.array([float(l[i_rt]) for l in linhas])   # tempo em segundos (0 a 3600)
+    y = np.log1p(runtime)                                  # Y = log(1 + runtime): encolhe os tempos grandes
 
+    # grupos: um número por pátio (instance_id), usado só para montar os folds
     ids = [l[i_id] for l in linhas]
     mapa = {v: k for k, v in enumerate(sorted(set(ids)))}
     grupos = np.array([mapa[v] for v in ids])
@@ -97,6 +103,7 @@ def carregar():
 class RegressaoLinearMultipla:
     def treinar(self, X, y):
         X1 = np.hstack([np.ones((X.shape[0], 1)), X])         # coluna de 1s -> β₀
+        # pinv (pseudo-inversa) = mesmo resultado da inversa, mas não quebra se XᵗX não tiver inversa
         self.beta = np.linalg.pinv(X1.T @ X1) @ X1.T @ y      # β = (XᵗX)⁻¹ Xᵗy
         return self
 
@@ -141,13 +148,14 @@ class RegressaoLinearMultipla:
 #   O ajustado penaliza o excesso de atributos.
 # ===========================================================================
 def metricas(y_real, y_prev, p):
-    n = len(y_real)
-    r2 = 1 - np.sum((y_real - y_prev) ** 2) / np.sum((y_real - y_real.mean()) ** 2)
+    # Tudo aqui está na escala log, exceto o mae_segundos
+    n = len(y_real)                                        # amostras do fold de TESTE (~420)
+    r2 = 1 - np.sum((y_real - y_prev) ** 2) / np.sum((y_real - y_real.mean()) ** 2)   # 1 - erro do modelo / erro de chutar a média
     return {
         "r2": float(r2),
-        "r2_ajustado": float(1 - (1 - r2) * (n - 1) / (n - p - 1)),
-        "mae": float(np.mean(np.abs(y_real - y_prev))),
-        "rmse": float(np.sqrt(np.mean((y_real - y_prev) ** 2))),
+        "r2_ajustado": float(1 - (1 - r2) * (n - 1) / (n - p - 1)),   # p = 25 atributos
+        "mae": float(np.mean(np.abs(y_real - y_prev))),                 # erro médio (em log)
+        "rmse": float(np.sqrt(np.mean((y_real - y_prev) ** 2))),       # pune mais os erros grandes
         # MAE em segundos: desfaz o log com expm1 (= e^y - 1)
         "mae_segundos": float(np.mean(np.abs(np.expm1(y_real) - np.expm1(y_prev)))),
     }
@@ -188,8 +196,9 @@ if __name__ == "__main__":
         print(f"   {c['atributo']:<25} r = {c['r']:+.3f}")
 
     # --- validação cruzada ---
+    # folds agrupados: as 4 linhas do mesmo pátio ficam sempre no mesmo fold
     folds = gerar_folds(len(y), k=K_FOLDS, semente=SEMENTE, grupos=grupos)
-    funcao_metricas = lambda yr, yp: metricas(yr, yp, p)
+    funcao_metricas = lambda yr, yp: metricas(yr, yp, p)    # "prende" o p = 25 na função de métricas
     resumos = {}
     for nome, criar in MODELOS.items():
         resultados, _ = validacao_cruzada(criar, X, y, folds, funcao_metricas)
@@ -204,6 +213,7 @@ if __name__ == "__main__":
             curva_k[dist].append({"k": k, "r2": resumir(res)["r2"]["media"]})
 
     # --- coeficientes da regressão linear (todos os dados, só para interpretar) ---
+    # Não entra na tabela de resultados: serve só para ver quais atributos mais pesam.
     pad = PadronizadorZScore().ajustar(X)
     beta = RegressaoLinearMultipla().treinar(pad.transformar(X), y).beta
     coeficientes = sorted([{"atributo": n, "beta": float(b)} for n, b in zip(nomes, beta[1:])],

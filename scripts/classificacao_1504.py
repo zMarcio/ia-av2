@@ -56,11 +56,12 @@ NOMES = [
 # ===========================================================================
 def carregar():
     _, linhas = ler_arff(ARQUIVO)
-    M = np.array(linhas, dtype=float)
+    M = np.array(linhas, dtype=float)       # tabela inteira: 1941 linhas x 34 colunas
+    # X = as 33 primeiras colunas; y = a coluna "Class" (2 -> 1 = outro defeito, 1 -> 0 = comum)
     X_completo, y = M[:, :33], (M[:, 33] == 2).astype(int)
 
-    removidas = list(range(27, 33)) + [12]  # índices de V28..V33 e V13
-    manter = [j for j in range(33) if j not in removidas]
+    removidas = list(range(27, 33)) + [12]  # índices de V28..V33 (vazamento) e V13 (redundante)
+    manter = [j for j in range(33) if j not in removidas]   # as 26 colunas que o modelo usa
     return X_completo, X_completo[:, manter], y, [NOMES[j] for j in manter], [NOMES[j] for j in removidas]
 
 
@@ -109,21 +110,23 @@ class BayesUnivariado:
     """
 
     def treinar(self, X, y):
-        self.classes = np.unique(y)
+        # TREINO: para cada classe, guarda a média e o desvio de cada um dos 26 atributos
+        self.classes = np.unique(y)                                                  # [0, 1]
         self.media = np.array([X[y == c].mean(axis=0) for c in self.classes])       # μ_jc
         self.desvio = np.array([X[y == c].std(axis=0) for c in self.classes])       # σ_jc
         self.desvio = np.maximum(self.desvio, 1e-9)                                 # evita σ = 0
-        self.log_priori = np.log([np.mean(y == c) for c in self.classes])           # log P(c)
+        self.log_priori = np.log([np.mean(y == c) for c in self.classes])           # log P(c): frequência da classe (~0,65 e ~0,35)
         return self
 
     def prever(self, X):
+        # TESTE: calcula um "score" por classe e escolhe o maior
         scores = np.zeros((X.shape[0], len(self.classes)))
         for i in range(len(self.classes)):
             mu, sigma = self.media[i], self.desvio[i]
             # log da fórmula p(x) acima, para cada atributo, somado entre atributos
             log_vero = (-np.log(np.sqrt(2 * np.pi) * sigma) - 0.5 * ((X - mu) / sigma) ** 2).sum(axis=1)
-            scores[:, i] = log_vero + self.log_priori[i]
-        return self.classes[scores.argmax(axis=1)]
+            scores[:, i] = log_vero + self.log_priori[i]      # log p(x|c) + log P(c)
+        return self.classes[scores.argmax(axis=1)]           # a classe com o maior score
 
 
 class BayesMultivariado:
@@ -158,29 +161,31 @@ class BayesMultivariado:
     """
 
     def __init__(self, regularizacao=1e-3):
-        self.lam = regularizacao
+        self.lam = regularizacao    # λ = 0,001: 0,1% da variância (dados em z-score), fixo, sem busca
 
     def treinar(self, X, y):
+        # TREINO: para cada classe, guarda μ, Σ⁻¹ e log|Σ| (a matriz é 26 x 26)
         self.classes = np.unique(y)
-        self.d = X.shape[1]
+        self.d = X.shape[1]                                                # d = 26 atributos
         self.media, self.inv_cov, self.log_det = [], [], []
         for c in self.classes:
-            Xc = X[y == c]
+            Xc = X[y == c]                                                 # só as chapas da classe c
             sigma = np.cov(Xc, rowvar=False) + self.lam * np.eye(self.d)   # Σ + λI
             self.media.append(Xc.mean(axis=0))                             # μ
             self.inv_cov.append(np.linalg.inv(sigma))                      # Σ⁻¹
             self.log_det.append(np.linalg.slogdet(sigma)[1])               # log|Σ|
-        self.log_priori = np.log([np.mean(y == c) for c in self.classes])
+        self.log_priori = np.log([np.mean(y == c) for c in self.classes])  # log P(c), igual ao univariado
         return self
 
     def prever(self, X):
+        # TESTE: mesma lógica do univariado; muda só o cálculo da verossimilhança
         scores = np.zeros((X.shape[0], len(self.classes)))
         for i in range(len(self.classes)):
             dif = X - self.media[i]                                        # (x - μ)
             mahalanobis = np.einsum("ij,jk,ik->i", dif, self.inv_cov[i], dif)  # (x-μ)ᵗ Σ⁻¹ (x-μ)
             log_vero = -0.5 * self.d * np.log(2 * np.pi) - 0.5 * self.log_det[i] - 0.5 * mahalanobis
-            scores[:, i] = log_vero + self.log_priori[i]
-        return self.classes[scores.argmax(axis=1)]
+            scores[:, i] = log_vero + self.log_priori[i]                   # log p(x|c) + log P(c)
+        return self.classes[scores.argmax(axis=1)]                         # a classe com o maior score
 
 
 # ===========================================================================
@@ -228,25 +233,25 @@ class BayesMultivariado:
 def matriz_confusao(y_real, y_prev, n_classes=2):
     M = np.zeros((n_classes, n_classes), dtype=int)
     for r, p in zip(y_real, y_prev):
-        M[r, p] += 1
-    return M
+        M[r, p] += 1     # linha = classe real, coluna = classe prevista
+    return M             # [[VN, FP], [FN, VP]]
 
 
 def metricas(y_real, y_prev):
     M = matriz_confusao(y_real, y_prev)
     precisoes, recalls, f1s = [], [], []
-    for c in range(2):
-        vp = M[c, c]
-        fp = M[:, c].sum() - vp
-        fn = M[c, :].sum() - vp
-        p = vp / (vp + fp) if vp + fp > 0 else 0.0
-        r = vp / (vp + fn) if vp + fn > 0 else 0.0
+    for c in range(2):                    # calcula as métricas tratando cada classe como "positiva"
+        vp = M[c, c]                      # acertos da classe c (diagonal)
+        fp = M[:, c].sum() - vp           # previstos como c, mas eram outra classe (alarme falso)
+        fn = M[c, :].sum() - vp           # eram c, mas o modelo disse outra (deixou passar)
+        p = vp / (vp + fp) if vp + fp > 0 else 0.0     # precisão
+        r = vp / (vp + fn) if vp + fn > 0 else 0.0     # recall
         precisoes.append(p)
         recalls.append(r)
-        f1s.append(2 * p * r / (p + r) if p + r > 0 else 0.0)
+        f1s.append(2 * p * r / (p + r) if p + r > 0 else 0.0)   # F1 = média harmônica de P e R
     return {
-        "acuracia": float(np.mean(y_real == y_prev)),
-        "precisao": float(np.mean(precisoes)),
+        "acuracia": float(np.mean(y_real == y_prev)),   # acertos / total
+        "precisao": float(np.mean(precisoes)),          # média MACRO: as 2 classes com o mesmo peso
         "recall": float(np.mean(recalls)),
         "f1": float(np.mean(f1s)),
     }
@@ -255,6 +260,7 @@ def metricas(y_real, y_prev):
 # ===========================================================================
 # 4. EXECUÇÃO
 # ===========================================================================
+# lambda = "receita" que cria um modelo novo a cada fold
 MODELOS = {
     "kNN (Dist. Euclidiana)": lambda: KNNClassificador(k=K_VIZINHOS, distancia="euclidiana"),
     "kNN (Dist. Manhattan)": lambda: KNNClassificador(k=K_VIZINHOS, distancia="manhattan"),
@@ -270,6 +276,7 @@ COLUNAS = [
 if __name__ == "__main__":
     X_completo, X, y, nomes, removidas = carregar()
     n0, n1 = int((y == 0).sum()), int((y == 1).sum())
+    # prova do vazamento: "V28..V33 todas zero" coincide com "é Other_Faults" em 100% das linhas
     vazamento = float(np.mean((X_completo[:, 27:33].sum(axis=1) == 0) == (y == 1)))
     correlacoes = top_correlacoes(X, nomes, y)
 
@@ -286,11 +293,12 @@ if __name__ == "__main__":
         print(f"   {c['atributo']:<25} r = {c['r']:+.3f}")
 
     # --- validação cruzada ---
+    # os MESMOS 5 folds para os 4 modelos: a comparação fica justa
     folds = gerar_folds(len(y), k=K_FOLDS, semente=SEMENTE, y=y, estratificado=True)
     resumos, confusoes = {}, {}
     for nome, criar in MODELOS.items():
         resultados, previsoes = validacao_cruzada(criar, X, y, folds, metricas)
-        resumos[nome] = resumir(resultados)
+        resumos[nome] = resumir(resultados)                 # média ± desvio dos 5 folds
         # matriz de confusão somando os 5 folds (cada amostra aparece uma vez)
         confusoes[nome] = sum(matriz_confusao(y[te], p) for (_, te), p in zip(folds, previsoes)).tolist()
 
